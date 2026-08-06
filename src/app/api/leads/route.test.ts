@@ -93,4 +93,78 @@ describe("POST /api/leads", () => {
       expect(stored[0].type).toBe(type);
     }
   );
+
+  it("rejects a type outside the known lead types", async () => {
+    const { POST } = await import("./route");
+
+    const response = await POST(
+      new Request("http://localhost/api/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "spam-bot",
+          name: "Ada Lovelace",
+          email: "ada@example.com",
+          goal: "Learn Python",
+        }),
+      })
+    );
+
+    expect(response.status).toBe(400);
+    expect(fs.existsSync(tempFilePath)).toBe(false);
+  });
+
+  it("rejects an invalid email format", async () => {
+    const { POST } = await import("./route");
+
+    const response = await POST(
+      new Request("http://localhost/api/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "find-tutor",
+          name: "Ada Lovelace",
+          email: "not-an-email",
+          goal: "Learn Python",
+        }),
+      })
+    );
+
+    expect(response.status).toBe(400);
+  });
+
+  it("rejects a goal exceeding the maximum length", async () => {
+    const { POST } = await import("./route");
+
+    const response = await POST(
+      new Request("http://localhost/api/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "find-tutor",
+          name: "Ada Lovelace",
+          email: "ada@example.com",
+          goal: "x".repeat(2001),
+        }),
+      })
+    );
+
+    expect(response.status).toBe(400);
+  });
+
+  it("returns 400 instead of throwing on malformed JSON", async () => {
+    const { POST } = await import("./route");
+
+    const response = await POST(
+      new Request("http://localhost/api/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: "{not valid json",
+      })
+    );
+
+    expect(response.status).toBe(400);
+    const body = await response.json();
+    expect(body.error).toBeTruthy();
+  });
 });

@@ -18,18 +18,22 @@ export function LeadForm({ type }: { type: LeadType }) {
     setStatus("submitting");
 
     const formData = new FormData(event.currentTarget);
-    const response = await fetch("/api/leads", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        type,
-        name: formData.get("name"),
-        email: formData.get("email"),
-        goal: formData.get("goal"),
-      }),
-    });
 
-    setStatus(response.ok ? "success" : "error");
+    try {
+      const response = await fetch("/api/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type,
+          name: formData.get("name"),
+          email: formData.get("email"),
+          goal: formData.get("goal"),
+        }),
+      });
+      setStatus(response.ok ? "success" : "error");
+    } catch {
+      setStatus("error");
+    }
   }
 
   if (status === "success") {

@@ -1,26 +1,27 @@
-import { leadStore } from "@/lib/leadStore";
+import { z } from "zod";
+import { LEAD_TYPES, saveLead } from "@/lib/leadStore";
 
-function validationError(body: Record<string, unknown>): string | null {
-  if (!body.type || !body.name || !body.email || !body.goal) {
-    return "type, name, email, and goal are all required";
-  }
-  return null;
-}
+const leadSchema = z.object({
+  type: z.enum(LEAD_TYPES),
+  name: z.string().min(1).max(200),
+  email: z.string().email().max(200),
+  goal: z.string().min(1).max(2000),
+});
 
 export async function POST(request: Request) {
-  const body = await request.json();
-
-  const error = validationError(body);
-  if (error) {
-    return Response.json({ error }, { status: 400 });
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return Response.json({ error: "Request body must be valid JSON" }, { status: 400 });
   }
 
-  const lead = await leadStore.saveLead({
-    type: body.type,
-    name: body.name,
-    email: body.email,
-    goal: body.goal,
-  });
+  const parsed = leadSchema.safeParse(body);
+  if (!parsed.success) {
+    return Response.json({ error: parsed.error.issues[0].message }, { status: 400 });
+  }
+
+  const lead = await saveLead(parsed.data);
 
   return Response.json({ lead }, { status: 201 });
 }
