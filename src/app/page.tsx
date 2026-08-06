@@ -2,9 +2,16 @@
 
 import { useState } from "react";
 import { LeadForm } from "@/components/LeadForm";
+import type { LeadType } from "@/lib/leadStore";
+
+const CTAS: { type: LeadType; label: string }[] = [
+  { type: "find-tutor", label: "Find a Tutor" },
+  { type: "become-tutor", label: "Become a Tutor" },
+  { type: "request-training", label: "Request Training" },
+];
 
 export default function Home() {
-  const [showFindTutorForm, setShowFindTutorForm] = useState(false);
+  const [activeLead, setActiveLead] = useState<LeadType | null>(null);
 
   return (
     <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
@@ -12,16 +19,21 @@ export default function Home() {
         <h1 className="text-3xl font-semibold text-black dark:text-zinc-50">
           StartRobos Tutor
         </h1>
-        {showFindTutorForm ? (
-          <LeadForm type="find-tutor" />
+        {activeLead ? (
+          <LeadForm type={activeLead} />
         ) : (
-          <button
-            type="button"
-            className="rounded-full bg-foreground px-5 py-3 text-background"
-            onClick={() => setShowFindTutorForm(true)}
-          >
-            Find a Tutor
-          </button>
+          <div className="flex flex-col gap-4 sm:flex-row">
+            {CTAS.map((cta) => (
+              <button
+                key={cta.type}
+                type="button"
+                className="rounded-full bg-foreground px-5 py-3 text-background"
+                onClick={() => setActiveLead(cta.type)}
+              >
+                {cta.label}
+              </button>
+            ))}
+          </div>
         )}
       </main>
     </div>
