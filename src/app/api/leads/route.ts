@@ -23,7 +23,9 @@ export async function POST(request: Request) {
   }
 
   const lead = await saveLead(parsed.data);
-  await notifyNewLead(lead);
+  // notifyNewLead is contracted to never throw (see notifyLead.ts), but the
+  // lead must never be lost even if that contract is ever broken by mistake.
+  await notifyNewLead(lead).catch(() => {});
 
   return Response.json({ lead }, { status: 201 });
 }

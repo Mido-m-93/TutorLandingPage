@@ -224,4 +224,26 @@ describe("POST /api/leads", () => {
       createdAt: expect.any(String),
     });
   });
+
+  it("still returns 201 with the persisted lead if the notifier rejects (defense-in-depth against a broken never-throws contract)", async () => {
+    notifyNewLeadMock.mockReset().mockRejectedValue(new Error("boom"));
+    const { POST } = await import("./route");
+
+    const response = await POST(
+      new Request("http://localhost/api/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "find-tutor",
+          name: "Ada Lovelace",
+          email: "ada@example.com",
+          goal: "Learn Python",
+        }),
+      })
+    );
+
+    expect(response.status).toBe(201);
+    const body = await response.json();
+    expect(body.lead.email).toBe("ada@example.com");
+  });
 });

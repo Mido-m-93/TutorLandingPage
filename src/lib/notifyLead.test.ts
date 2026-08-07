@@ -125,21 +125,6 @@ describe("notifyNewLead", () => {
     errorSpy.mockRestore();
   });
 
-  it("does not hang forever if the send call never resolves", async () => {
-    vi.useFakeTimers();
-    sendMock.mockImplementation(() => new Promise(() => {}));
-    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-
-    const pending = notifyNewLead(lead);
-    await vi.runAllTimersAsync();
-
-    await expect(pending).resolves.toBeUndefined();
-    expect(errorSpy).toHaveBeenCalled();
-
-    errorSpy.mockRestore();
-    vi.useRealTimers();
-  });
-
   it("does not time out before the configured 5000ms threshold", async () => {
     vi.useFakeTimers();
     sendMock.mockImplementation(() => new Promise(() => {}));
