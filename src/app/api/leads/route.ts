@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { LEAD_TYPES, saveLead } from "@/lib/leadStore";
+import { notifyNewLead } from "@/lib/notifyLead";
 
 const leadSchema = z.object({
   type: z.enum(LEAD_TYPES),
@@ -22,6 +23,12 @@ export async function POST(request: Request) {
   }
 
   const lead = await saveLead(parsed.data);
+
+  try {
+    await notifyNewLead(lead);
+  } catch (error) {
+    console.error("Lead notification failed unexpectedly:", error);
+  }
 
   return Response.json({ lead }, { status: 201 });
 }

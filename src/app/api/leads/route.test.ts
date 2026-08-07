@@ -3,12 +3,18 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
+const notifyNewLeadMock = vi.fn().mockResolvedValue(undefined);
+vi.mock("@/lib/notifyLead", () => ({
+  notifyNewLead: notifyNewLeadMock,
+}));
+
 let tempFilePath: string;
 
 beforeEach(() => {
   tempFilePath = path.join(os.tmpdir(), `leads-test-${Date.now()}-${Math.random().toString(36).slice(2)}.json`);
   process.env.LEADS_FILE_PATH = tempFilePath;
   vi.resetModules();
+  notifyNewLeadMock.mockReset().mockResolvedValue(undefined);
 });
 
 afterEach(() => {
@@ -166,5 +172,28 @@ describe("POST /api/leads", () => {
     expect(response.status).toBe(400);
     const body = await response.json();
     expect(body.error).toBeTruthy();
+  });
+
+  it("still returns 201 with the lead when the notification email fails", async () => {
+    notifyNewLeadMock.mockRejectedValue(new Error("should never propagate"));
+    const { POST } = await import("./route");
+
+    const response = await POST(
+      new Request("http://localhost/api/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "find-tutor",
+          name: "Ada Lovelace",
+          email: "ada@example.com",
+          goal: "Learn Python",
+        }),
+      })
+    );
+
+    expect(response.status).toBe(201);
+    const body = await response.json();
+    expect(body.lead.email).toBe("ada@example.com");
+    expect(notifyNewLeadMock).toHaveBeenCalledTimes(1);
   });
 });
