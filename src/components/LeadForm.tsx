@@ -36,28 +36,50 @@ export function LeadForm({ type }: { type: LeadType }) {
     }
   }
 
+  const inputClassName =
+    "rounded-lg border border-black/[.08] bg-transparent px-3 py-2 text-black outline-none focus:border-black/30 dark:border-white/[.145] dark:text-zinc-50 dark:focus:border-white/40";
+  const labelClassName = "flex flex-col gap-1 text-left text-sm font-medium text-zinc-700 dark:text-zinc-300";
+
   if (status === "success") {
-    return <p>Thanks! We&apos;ll be in touch soon.</p>;
+    return (
+      <p className="text-lg font-medium text-black dark:text-zinc-50">
+        Thanks! We&apos;ll be in touch soon.
+      </p>
+    );
   }
 
   return (
-    <form onSubmit={handleSubmit}>
-      <label>
+    <form onSubmit={handleSubmit} className="flex w-full max-w-sm flex-col gap-4">
+      <label className={labelClassName}>
         Name
-        <input name="name" required />
+        <input name="name" required className={inputClassName} />
       </label>
-      <label>
+      <label className={labelClassName}>
         Email
-        <input name="email" type="email" required />
+        <input name="email" type="email" required className={inputClassName} />
       </label>
-      <label>
+      <label className={labelClassName}>
         Goal
-        <textarea name="goal" placeholder={copy.goalLabel} required />
+        <textarea
+          name="goal"
+          placeholder={copy.goalLabel}
+          required
+          rows={3}
+          className={inputClassName}
+        />
       </label>
-      <button type="submit" disabled={status === "submitting"}>
+      <button
+        type="submit"
+        disabled={status === "submitting"}
+        className="rounded-full bg-foreground px-5 py-3 text-background disabled:opacity-50"
+      >
         {copy.submitLabel}
       </button>
-      {status === "error" && <p role="alert">Something went wrong. Please try again.</p>}
+      {status === "error" && (
+        <p role="alert" className="text-sm text-red-600 dark:text-red-400">
+          Something went wrong. Please try again.
+        </p>
+      )}
     </form>
   );
 }
