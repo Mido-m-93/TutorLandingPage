@@ -246,4 +246,38 @@ describe("POST /api/leads", () => {
     const body = await response.json();
     expect(body.lead.email).toBe("ada@example.com");
   });
+
+  it("does not send a notification when the submission fails validation", async () => {
+    const { POST } = await import("./route");
+
+    const response = await POST(
+      new Request("http://localhost/api/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "find-tutor",
+          name: "Ada Lovelace",
+          // missing email and goal
+        }),
+      })
+    );
+
+    expect(response.status).toBe(400);
+    expect(notifyNewLeadMock).not.toHaveBeenCalled();
+  });
+
+  it("does not send a notification when the request body is malformed JSON", async () => {
+    const { POST } = await import("./route");
+
+    const response = await POST(
+      new Request("http://localhost/api/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: "{not valid json",
+      })
+    );
+
+    expect(response.status).toBe(400);
+    expect(notifyNewLeadMock).not.toHaveBeenCalled();
+  });
 });
