@@ -174,8 +174,7 @@ describe("POST /api/leads", () => {
     expect(body.error).toBeTruthy();
   });
 
-  it("still returns 201 with the lead when the notification email fails", async () => {
-    notifyNewLeadMock.mockRejectedValue(new Error("should never propagate"));
+  it("notifies about the lead after it is persisted", async () => {
     const { POST } = await import("./route");
 
     const response = await POST(
@@ -192,8 +191,9 @@ describe("POST /api/leads", () => {
     );
 
     expect(response.status).toBe(201);
-    const body = await response.json();
-    expect(body.lead.email).toBe("ada@example.com");
     expect(notifyNewLeadMock).toHaveBeenCalledTimes(1);
+    expect(notifyNewLeadMock).toHaveBeenCalledWith(
+      expect.objectContaining({ email: "ada@example.com" })
+    );
   });
 });

@@ -14,13 +14,17 @@ export async function notifyNewLead(lead: Lead): Promise<void> {
   const resend = new Resend(process.env.RESEND_API_KEY);
 
   try {
-    await resend.emails.send({
+    const { error } = await resend.emails.send({
       to: ADMIN_EMAIL,
       from: SENDER,
       subject: `New ${LEAD_TYPE_LABELS[lead.type]} lead`,
       text: `Name: ${lead.name}\nEmail: ${lead.email}\nGoal: ${lead.goal}\nType: ${lead.type}`,
     });
+    if (error) {
+      console.error("Resend rejected lead notification email:", error.message);
+    }
   } catch (error) {
-    console.error("Failed to send lead notification email:", error);
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("Failed to send lead notification email:", message);
   }
 }

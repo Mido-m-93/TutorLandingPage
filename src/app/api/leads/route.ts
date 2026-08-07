@@ -23,12 +23,7 @@ export async function POST(request: Request) {
   }
 
   const lead = await saveLead(parsed.data);
-
-  try {
-    await notifyNewLead(lead);
-  } catch (error) {
-    console.error("Lead notification failed unexpectedly:", error);
-  }
+  await notifyNewLead(lead);
 
   return Response.json({ lead }, { status: 201 });
 }
