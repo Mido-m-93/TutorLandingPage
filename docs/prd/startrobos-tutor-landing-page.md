@@ -32,7 +32,7 @@ lightweight lead-capture form; there is no live booking or account system yet.
 - **Stack**: Next.js (App Router) + TypeScript + Tailwind CSS, deployed on Vercel.
 - **Page module**: a single-page marketing site (hero, subjects, how-it-works, three CTA paths, footer). No routing complexity beyond the one page plus form modals/sections.
 - **LeadForm module** (deep): one reusable form component parameterized by lead type (`find-tutor` | `become-tutor` | `request-training`), fields: name, email, subject/goal, plus the type. Same component backs all three CTAs — only copy and the type field differ.
-- **Leads API route**: one route handler that validates and stores a submitted lead. Storage is a simple persisted store (flat file or lightweight DB table) behind that route — the rest of the app never talks to storage directly. No email/notification integration in this phase.
+- **Leads API route**: one route handler that validates and stores a submitted lead. Storage is a simple persisted store (flat file or lightweight DB table) behind that route — the rest of the app never talks to storage directly. No email/notification integration in this phase. <!-- last-synced: 2026-08-07 by blueprint-sync --> Superseded: email notification shipped in `docs/prd/lead-notification-email.md` (issue #8). The flat-file store also has a known production reliability issue on Vercel's filesystem, tracked in issue #7.
 - **Content data**: subjects (programming, AI, robotics, automation, professional skills) and sample tutor profiles are static placeholder data local to the page module, not fetched from an external source.
 - **Branding**: no existing Coop Lab logo/assets to reuse — page ships with a clean typographic wordmark and a self-contained Tailwind theme (no external design system).
 
@@ -48,5 +48,5 @@ lightweight lead-capture form; there is no live booking or account system yet.
 - Live booking calendar, scheduling, or availability system
 - Payments/billing
 - User accounts, login, or tutor dashboards
-- Email or notification delivery for submitted leads
+- ~~Email or notification delivery for submitted leads~~ — done, see `docs/prd/lead-notification-email.md` (issue #8)
 - Any content or linkage related to StartupRobos (separate product)
