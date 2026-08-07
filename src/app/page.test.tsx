@@ -29,4 +29,15 @@ describe("Home page", () => {
 
     expect(screen.getByRole("button", { name: /request training/i })).toBeInTheDocument();
   });
+
+  it("returns to the CTA choices when Back is clicked", () => {
+    render(<Home />);
+
+    fireEvent.click(screen.getByRole("button", { name: /become a tutor/i }));
+    fireEvent.click(screen.getByRole("button", { name: /back/i }));
+
+    expect(screen.getByRole("button", { name: /find a tutor/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /become a tutor/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /request training/i })).toBeInTheDocument();
+  });
 });

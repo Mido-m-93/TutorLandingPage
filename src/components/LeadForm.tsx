@@ -71,7 +71,7 @@ export function LeadForm({ type }: { type: LeadType }) {
       <button
         type="submit"
         disabled={status === "submitting"}
-        className="rounded-full bg-foreground px-5 py-3 text-background disabled:opacity-50"
+        className="rounded-full bg-foreground px-5 py-3 text-background transition-colors hover:bg-zinc-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground disabled:opacity-50 disabled:hover:bg-foreground dark:hover:bg-zinc-200"
       >
         {copy.submitLabel}
       </button>
