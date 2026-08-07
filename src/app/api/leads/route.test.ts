@@ -196,4 +196,32 @@ describe("POST /api/leads", () => {
       expect.objectContaining({ email: "ada@example.com" })
     );
   });
+
+  it("notifies with the full persisted lead, including the generated id and createdAt", async () => {
+    const { POST } = await import("./route");
+
+    const response = await POST(
+      new Request("http://localhost/api/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "find-tutor",
+          name: "Ada Lovelace",
+          email: "ada@example.com",
+          goal: "Learn Python",
+        }),
+      })
+    );
+
+    const body = await response.json();
+    expect(notifyNewLeadMock).toHaveBeenCalledWith(body.lead);
+    expect(notifyNewLeadMock.mock.calls[0][0]).toMatchObject({
+      id: expect.any(String),
+      type: "find-tutor",
+      name: "Ada Lovelace",
+      email: "ada@example.com",
+      goal: "Learn Python",
+      createdAt: expect.any(String),
+    });
+  });
 });

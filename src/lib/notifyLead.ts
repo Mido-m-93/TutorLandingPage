@@ -10,16 +10,26 @@ const LEAD_TYPE_LABELS: Record<LeadType, string> = {
   "request-training": "Request Training",
 };
 
-export async function notifyNewLead(lead: Lead): Promise<void> {
-  const resend = new Resend(process.env.RESEND_API_KEY);
+const SEND_TIMEOUT_MS = 5000;
 
+function timeout(ms: number): Promise<never> {
+  return new Promise((_, reject) => {
+    setTimeout(() => reject(new Error(`Resend call timed out after ${ms}ms`)), ms);
+  });
+}
+
+export async function notifyNewLead(lead: Lead): Promise<void> {
   try {
-    const { error } = await resend.emails.send({
-      to: ADMIN_EMAIL,
-      from: SENDER,
-      subject: `New ${LEAD_TYPE_LABELS[lead.type]} lead`,
-      text: `Name: ${lead.name}\nEmail: ${lead.email}\nGoal: ${lead.goal}\nType: ${lead.type}`,
-    });
+    const resend = new Resend(process.env.RESEND_API_KEY);
+    const { error } = await Promise.race([
+      resend.emails.send({
+        to: ADMIN_EMAIL,
+        from: SENDER,
+        subject: `New ${LEAD_TYPE_LABELS[lead.type]} lead`,
+        text: `Name: ${lead.name}\nEmail: ${lead.email}\nGoal: ${lead.goal}\nType: ${lead.type}`,
+      }),
+      timeout(SEND_TIMEOUT_MS),
+    ]);
     if (error) {
       console.error("Resend rejected lead notification email:", error.message);
     }

@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { Lead, LeadType } from "./leadStore";
+import { notifyNewLead } from "./notifyLead";
 
 const sendMock = vi.fn();
 const resendConstructorMock = vi.fn();
@@ -22,6 +23,8 @@ const lead: Lead = {
   createdAt: "2026-01-01T00:00:00.000Z",
 };
 
+const successResponse = { data: { id: "email-1" }, error: null };
+
 afterEach(() => {
   sendMock.mockReset();
   resendConstructorMock.mockReset();
@@ -29,8 +32,7 @@ afterEach(() => {
 
 describe("notifyNewLead", () => {
   it("sends an admin notification email with the lead's details", async () => {
-    sendMock.mockResolvedValue({ data: { id: "email-1" }, error: null });
-    const { notifyNewLead } = await import("./notifyLead");
+    sendMock.mockResolvedValue(successResponse);
 
     await notifyNewLead(lead);
 
@@ -44,13 +46,23 @@ describe("notifyNewLead", () => {
     );
   });
 
+  it("includes the lead's email and goal in the email body, not just the name", async () => {
+    sendMock.mockResolvedValue(successResponse);
+
+    await notifyNewLead(lead);
+
+    const call = sendMock.mock.calls[0][0];
+    const body = call.text ?? call.html;
+    expect(body).toEqual(expect.stringContaining("ada@example.com"));
+    expect(body).toEqual(expect.stringContaining("Learn Python"));
+  });
+
   it("logs and does not throw when Resend resolves with an error (the real API failure shape)", async () => {
     sendMock.mockResolvedValue({
       data: null,
       error: { name: "validation_error", message: "Invalid `from` address" },
     });
     const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-    const { notifyNewLead } = await import("./notifyLead");
 
     await expect(notifyNewLead(lead)).resolves.toBeUndefined();
     expect(errorSpy).toHaveBeenCalledWith(
@@ -64,7 +76,6 @@ describe("notifyNewLead", () => {
   it("does not throw when the send call itself rejects (transport failure)", async () => {
     sendMock.mockRejectedValue(new Error("Resend API unreachable"));
     const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-    const { notifyNewLead } = await import("./notifyLead");
 
     await expect(notifyNewLead(lead)).resolves.toBeUndefined();
     expect(errorSpy).toHaveBeenCalled();
@@ -79,8 +90,7 @@ describe("notifyNewLead", () => {
   ] as [LeadType, RegExp][])(
     "uses the correct subject label for lead type %s",
     async (type, expectedSubject) => {
-      sendMock.mockResolvedValue({ data: { id: "email-1" }, error: null });
-      const { notifyNewLead } = await import("./notifyLead");
+      sendMock.mockResolvedValue(successResponse);
 
       await notifyNewLead({ ...lead, type });
 
@@ -93,9 +103,7 @@ describe("notifyNewLead", () => {
   it("constructs the Resend client with the RESEND_API_KEY environment variable", async () => {
     const originalKey = process.env.RESEND_API_KEY;
     process.env.RESEND_API_KEY = "test-api-key";
-    sendMock.mockResolvedValue({ data: { id: "email-1" }, error: null });
-    vi.resetModules();
-    const { notifyNewLead } = await import("./notifyLead");
+    sendMock.mockResolvedValue(successResponse);
 
     await notifyNewLead(lead);
 
@@ -103,5 +111,32 @@ describe("notifyNewLead", () => {
 
     if (originalKey === undefined) delete process.env.RESEND_API_KEY;
     else process.env.RESEND_API_KEY = originalKey;
+  });
+
+  it("does not throw when the Resend client itself fails to construct (e.g. missing API key)", async () => {
+    resendConstructorMock.mockImplementationOnce(() => {
+      throw new Error("Missing API key. Pass it to the constructor `new Resend(apiKey)`");
+    });
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    await expect(notifyNewLead(lead)).resolves.toBeUndefined();
+    expect(errorSpy).toHaveBeenCalled();
+
+    errorSpy.mockRestore();
+  });
+
+  it("does not hang forever if the send call never resolves", async () => {
+    vi.useFakeTimers();
+    sendMock.mockImplementation(() => new Promise(() => {}));
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    const pending = notifyNewLead(lead);
+    await vi.runAllTimersAsync();
+
+    await expect(pending).resolves.toBeUndefined();
+    expect(errorSpy).toHaveBeenCalled();
+
+    errorSpy.mockRestore();
+    vi.useRealTimers();
   });
 });
