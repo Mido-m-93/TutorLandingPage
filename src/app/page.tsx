@@ -17,7 +17,7 @@ export default function Home() {
   return (
     <div className="flex flex-col items-center bg-zinc-50 font-sans dark:bg-black">
       <main className="flex w-full max-w-4xl flex-col items-center gap-24 bg-white px-6 py-24 dark:bg-black sm:px-16">
-        <section className="flex flex-col items-center gap-4 text-center">
+        <section className="flex flex-col items-center gap-6 text-center">
           <p className="text-sm font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
             Powered by Coop Lab
           </p>
@@ -28,6 +28,32 @@ export default function Home() {
             Connecting learners with experienced tutors for personalized, practical
             learning — from first lines of code to production-grade skills.
           </p>
+
+          {activeLead ? (
+            <div className="flex flex-col items-center gap-4">
+              <LeadForm type={activeLead} />
+              <button
+                type="button"
+                className="text-sm font-medium text-zinc-500 underline-offset-4 hover:text-black hover:underline dark:text-zinc-400 dark:hover:text-zinc-50"
+                onClick={() => setActiveLead(null)}
+              >
+                Back
+              </button>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-4 sm:flex-row">
+              {CTAS.map((cta) => (
+                <button
+                  key={cta.type}
+                  type="button"
+                  className="rounded-full bg-foreground px-5 py-3 text-background transition-colors hover:bg-zinc-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground dark:hover:bg-zinc-200"
+                  onClick={() => setActiveLead(cta.type)}
+                >
+                  {cta.label}
+                </button>
+              ))}
+            </div>
+          )}
         </section>
 
         <section className="flex flex-col items-center gap-6 text-center">
@@ -81,34 +107,6 @@ export default function Home() {
               </div>
             ))}
           </div>
-        </section>
-
-        <section className="flex flex-col items-center gap-6 text-center">
-          {activeLead ? (
-            <div className="flex flex-col items-center gap-4">
-              <LeadForm type={activeLead} />
-              <button
-                type="button"
-                className="text-sm font-medium text-zinc-500 underline-offset-4 hover:text-black hover:underline dark:text-zinc-400 dark:hover:text-zinc-50"
-                onClick={() => setActiveLead(null)}
-              >
-                Back
-              </button>
-            </div>
-          ) : (
-            <div className="flex flex-col gap-4 sm:flex-row">
-              {CTAS.map((cta) => (
-                <button
-                  key={cta.type}
-                  type="button"
-                  className="rounded-full bg-foreground px-5 py-3 text-background transition-colors transition-transform hover:bg-zinc-700 hover:scale-[1.03] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground dark:hover:bg-zinc-200"
-                  onClick={() => setActiveLead(cta.type)}
-                >
-                  {cta.label}
-                </button>
-              ))}
-            </div>
-          )}
         </section>
       </main>
     </div>
