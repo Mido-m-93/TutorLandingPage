@@ -30,7 +30,7 @@ succeeds or fails.
 - **Provider**: Resend.
 - **Sender address**: `onboarding@resend.dev` (Resend's shared default sender - no custom domain verification needed for this phase).
 - **Recipient**: a single fixed admin address (Mohamada@roboco-op.org), not user-configurable through the UI.
-- **Trigger point**: the leads API route calls the notifier immediately after a lead is successfully persisted, for all three lead types. The route's response to the client (201 + the saved lead) does not wait on or depend on the notifier's outcome beyond "don't crash the request."
+- **Trigger point**: the leads API route calls the notifier immediately after a lead is successfully persisted, for all three lead types. The route awaits the notifier (bounded by its own internal 5s timeout) before responding, but the notifier's outcome never affects the response - a failed or slow send still returns 201 with the saved lead. Making this fully non-blocking (fire-and-forget, decoupling response latency entirely) was considered but rejected: it would require Next.js's `after()`, which needs a real request context and would have forced a rewrite of the route's test suite from unit-style direct invocation to a heavier integration-test setup, for a benefit bounded to a few seconds in the rare case of a slow provider.
 - **Credentials**: the Resend API key is read from an environment variable already configured in the Vercel production environment; no new user-facing configuration.
 - **Email content**: subject line identifies the lead type (e.g. "New Find a Tutor lead"); body includes name, email, subject/goal, and lead type.
 
