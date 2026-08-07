@@ -38,7 +38,7 @@ describe("notifyNewLead", () => {
 
     expect(sendMock).toHaveBeenCalledTimes(1);
     const call = sendMock.mock.calls[0][0];
-    expect(call.to).toBe("Mohamada@roboco-op.org");
+    expect(call.to).toBe("mohamada@roboco-op.org");
     expect(call.from).toBe("onboarding@resend.dev");
     expect(call.subject).toMatch(/find a tutor/i);
     expect(call.text ?? call.html).toEqual(

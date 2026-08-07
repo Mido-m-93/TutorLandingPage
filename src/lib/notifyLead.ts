@@ -1,7 +1,7 @@
 import { Resend } from "resend";
 import type { Lead, LeadType } from "./leadStore";
 
-const ADMIN_EMAIL = "Mohamada@roboco-op.org";
+const ADMIN_EMAIL = "mohamada@roboco-op.org";
 const SENDER = "onboarding@resend.dev";
 
 const LEAD_TYPE_LABELS: Record<LeadType, string> = {
