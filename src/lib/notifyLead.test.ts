@@ -139,4 +139,67 @@ describe("notifyNewLead", () => {
     errorSpy.mockRestore();
     vi.useRealTimers();
   });
+
+  it("does not time out before the configured 5000ms threshold", async () => {
+    vi.useFakeTimers();
+    sendMock.mockImplementation(() => new Promise(() => {}));
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    notifyNewLead(lead);
+    await vi.advanceTimersByTimeAsync(4999);
+
+    expect(errorSpy).not.toHaveBeenCalled();
+
+    errorSpy.mockRestore();
+    vi.useRealTimers();
+  });
+
+  it("times out at exactly the configured 5000ms threshold", async () => {
+    vi.useFakeTimers();
+    sendMock.mockImplementation(() => new Promise(() => {}));
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    const pending = notifyNewLead(lead);
+    await vi.advanceTimersByTimeAsync(5000);
+
+    await expect(pending).resolves.toBeUndefined();
+    expect(errorSpy).toHaveBeenCalledWith(
+      expect.stringContaining("Failed to send"),
+      expect.stringContaining("5000ms")
+    );
+
+    errorSpy.mockRestore();
+    vi.useRealTimers();
+  });
+
+  it("delivers a successful result when the send resolves before the timeout elapses, without racing to a false timeout", async () => {
+    vi.useFakeTimers();
+    sendMock.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          setTimeout(() => resolve(successResponse), 4000);
+        })
+    );
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    const pending = notifyNewLead(lead);
+    await vi.advanceTimersByTimeAsync(4000);
+
+    await expect(pending).resolves.toBeUndefined();
+    expect(errorSpy).not.toHaveBeenCalled();
+
+    errorSpy.mockRestore();
+    vi.useRealTimers();
+  });
+
+  it("clears the timeout timer once the send succeeds, leaving nothing pending", async () => {
+    vi.useFakeTimers();
+    sendMock.mockResolvedValue(successResponse);
+
+    await notifyNewLead(lead);
+
+    expect(vi.getTimerCount()).toBe(0);
+
+    vi.useRealTimers();
+  });
 });
